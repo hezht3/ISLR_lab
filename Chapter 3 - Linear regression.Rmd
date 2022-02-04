@@ -1,0 +1,193 @@
+---
+title: "Linear Regression Lab"
+author: "Zhengting (Johnathan) He"
+date: "2022/2/3"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+require(MASS)
+require(ISLR)
+```
+
+
+# Simple Linear Regression
+
+
+```{r}
+Boston <- MASS::Boston
+names(Boston)
+```
+
+
+```{r}
+lm.fit <- lm(medv ~ lstat, data = Boston)
+lm.fit
+```
+
+
+```{r}
+summary(lm.fit)
+```
+
+
+```{r}
+names(lm.fit)
+```
+
+
+```{r}
+coef(lm.fit)
+```
+
+
+```{r}
+confint(lm.fit)
+```
+
+
+```{r}
+predict(lm.fit, data.frame(lstat = c(5, 10, 15)),
+        interval = "confidence")
+```
+
+
+```{r}
+predict(lm.fit, data.frame(lstat = c(5, 10, 15)),
+        interval = "prediction")
+```
+
+
+```{r}
+plot(Boston$lstat, Boston$medv, data = Boston)
+abline(lm.fit)
+```
+
+
+```{r}
+plot(Boston$lstat, Boston$medv, data = Boston)
+abline(lm.fit, lwd = 3)
+abline(lm.fit, lwd = 3, col = "red")
+plot(Boston$lstat, Boston$medv, data = Boston, col = "red")
+plot(Boston$lstat, Boston$medv, data = Boston, pch = 20)
+plot(Boston$lstat, Boston$medv, data = Boston, pch = "+")
+plot(1:20, 1:20, pch = 1:20)
+```
+
+
+```{r}
+par(mfrow = c(2,2))
+plot(lm.fit)
+```
+
+
+```{r}
+plot(predict(lm.fit), residuals(lm.fit))
+plot(predict(lm.fit), rstudent(lm.fit))
+```
+
+
+```{r}
+plot(hatvalues(lm.fit))
+which.max(hatvalues(lm.fit))
+```
+
+
+# Multiple Linear Regression
+
+
+```{r}
+lm.fit <- lm(medv ~ lstat + age, data = Boston)
+summary(lm.fit)
+```
+
+
+```{r}
+lm.fit <- lm(medv ~ ., data = Boston)
+summary(lm.fit)
+```
+
+
+```{r}
+require(car)
+vif(lm.fit)
+```
+
+
+```{r}
+lm.fit1 <- lm(medv ~ . - age, data = Boston)
+summary(lm.fit1)
+```
+
+
+```{r}
+lm.fit1 <- update(lm.fit, ~ . - age)
+```
+
+
+# Interaction Terms
+
+
+```{r}
+summary(lm(medv ~ lstat*age, data = Boston))
+```
+
+
+# Non-linear Transformations of the Predictors
+
+
+```{r}
+lm.fit2 <- lm(medv ~ lstat + I(lstat^2), data = Boston)
+summary(lm.fit2)
+```
+
+
+```{r}
+lm.fit <- lm(medv ~ lstat, data = Boston)
+anova(lm.fit, lm.fit2)
+```
+
+
+```{r}
+par(mfrow = c(2,2))
+plot(lm.fit2)
+```
+
+
+```{r}
+lm.fit5 <- lm(medv ~ poly(lstat, 5), data = Boston)
+summary(lm.fit5)
+```
+
+
+```{r}
+summary(lm(medv ~ log(rm), data = Boston))
+```
+
+
+# Qualitative Predictors
+
+
+```{r}
+fix(Carseats)
+names(Carseats)
+```
+
+
+```{r}
+lm.fit <- lm(Sales ~ . + Income:Advertising + Price:Age, data = Carseats)
+summary(lm.fit)
+```
+
+
+```{r}
+attach(Carseats)
+contrasts(ShelveLoc)
+```
+
