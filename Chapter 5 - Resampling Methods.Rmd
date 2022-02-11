@@ -1,0 +1,162 @@
+---
+title: "Chapter 5 - Resampling Methods"
+author: "Zhengting (Johnathan) He"
+date: "2022/2/11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# The Validation Set Approach
+
+
+```{r}
+require(ISLR)
+set.seed(1)
+train <- sample(392, 196)
+```
+
+
+```{r}
+lm.fit <- lm(mpg ~ horsepower, data = Auto, subset = train)
+```
+
+
+```{r}
+attach(Auto)
+mean((mpg-predict(lm.fit, Auto))[-train]^2)
+```
+
+
+```{r}
+lm.fit2 <- lm(mpg ~ poly(horsepower, 2), data = Auto, subset = train)
+mean((mpg-predict(lm.fit2, Auto))[-train]^2)
+```
+
+
+```{r}
+lm.fit3 <- lm(mpg ~ poly(horsepower, 3), data = Auto, subset = train)
+mean((mpg-predict(lm.fit3, Auto))[-train]^2)
+```
+
+
+```{r}
+set.seed(2)
+train <- sample(392, 196)
+lm.fit <- lm(mpg ~ horsepower, data = Auto, subset = train)
+mean((mpg-predict(lm.fit, Auto))[-train]^2)
+```
+
+
+```{r}
+lm.fit2 <- lm(mpg ~ poly(horsepower, 2), data = Auto, subset = train)
+mean((mpg-predict(lm.fit2, Auto))[-train]^2)
+```
+
+
+```{r}
+lm.fit3 <- lm(mpg ~ poly(horsepower, 3), data = Auto, subset = train)
+mean((mpg-predict(lm.fit3, Auto))[-train]^2)
+```
+
+
+```{r}
+require(boot)
+glm.fit <- glm(mpg ~ horsepower, data = Auto)
+cv.err <- cv.glm(Auto, glm.fit)
+cv.err$delta
+```
+
+
+```{r}
+require(tidyverse)
+c(1:5) %>% 
+    map_dbl(~ cv.glm(Auto, glm(mpg ~ poly(horsepower, .x), data = Auto))$delta[1])
+```
+
+
+# k-Fold Cross-Validation
+
+
+```{r}
+set.seed(17)
+c(1:10) %>% 
+    map_dbl(~ cv.glm(Auto, glm(mpg ~ poly(horsepower, .x), data = Auto), K = 10)$delta[1])
+```
+
+
+# Bootstrap
+
+
+## Estimating the Accuracy of a Statistic of Interest
+
+
+```{r}
+alpha.fn <- function(data, index) {
+    X <- data$X[index]
+    Y <- data$Y[index]
+    return((var(Y) - cov(X, Y))/(var(X) + var(Y) - 2*cov(X, Y)))
+}
+```
+
+
+```{r}
+alpha.fn(Portfolio, 1:100)
+```
+
+
+```{r}
+set.seed(1)
+alpha.fn(Portfolio, sample(100, 100, replace = T))
+```
+
+
+```{r}
+boot(Portfolio, alpha.fn, R = 1000)
+```
+
+
+## Estimating the Accuracy of a Linear Regression Model
+
+
+```{r}
+boot.fn <- function(data, index) {
+    return(coef(lm(mpg ~ horsepower, data = data, subset = index)))
+}
+boot.fn(Auto, 1:392)
+```
+
+
+```{r}
+set.seed(1)
+boot.fn(Auto, sample(392, 392, replace = T))
+boot.fn(Auto, sample(392, 392, replace = T))
+```
+
+
+```{r}
+boot(Auto, boot.fn, 1000)
+```
+
+
+```{r}
+summary(lm(mpg ~ horsepower, data = Auto))$coef
+```
+
+
+```{r}
+boot.fn <- function(data, index) {
+    coefficients(lm(mpg ~ horsepower + I(horsepower^2), data = data, subset = index))
+}
+set.seed(1)
+boot(Auto, boot.fn, 1000)
+```
+
+
+```{r}
+summary(lm(mpg ~ horsepower + I(horsepower^2), data = Auto))$coef
+```
+
